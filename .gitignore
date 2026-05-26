@@ -1,0 +1,4 @@
+node_modules/
+.devwatch/
+.superpowers/
+*.log
