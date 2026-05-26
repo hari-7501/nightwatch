@@ -1,1 +1,192 @@
-<!DOCTYPE html><html><body>stub</body></html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🏰 Nightwatch — The Tower</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg:      #0a0e1a;
+    --surface: #0f1629;
+    --border:  #1e2d4a;
+    --accent:  #f97316;
+    --text:    #e2e8f0;
+    --muted:   #64748b;
+    --success: #22c55e;
+    --warning: #f59e0b;
+    --danger:  #ef4444;
+    --ai:      #818cf8;
+  }
+  body { background: var(--bg); color: var(--text); font-family: 'Courier New', monospace; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+  .header { background: var(--surface); border-bottom: 1px solid var(--border); padding: 0 1rem; height: 48px; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
+  .header-title { color: var(--accent); font-weight: bold; font-size: 1rem; letter-spacing: 2px; }
+  .header-sub { color: var(--muted); font-size: 0.75rem; letter-spacing: 1px; }
+  .main { display: flex; flex: 1; overflow: hidden; }
+  .sidebar { width: 180px; background: var(--surface); border-right: 1px solid var(--border); display: flex; flex-direction: column; flex-shrink: 0; overflow-y: auto; }
+  .sidebar-label { padding: 0.5rem 0.75rem 0.3rem; color: var(--muted); font-size: 0.65rem; text-transform: uppercase; letter-spacing: 1px; }
+  .service-item { padding: 0.5rem 0.75rem; cursor: pointer; font-size: 0.8rem; display: flex; align-items: center; gap: 0.5rem; border-left: 2px solid transparent; }
+  .service-item:hover { background: var(--border); }
+  .service-item.active { background: rgba(249,115,22,0.1); border-left-color: var(--accent); }
+  .service-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--success); flex-shrink: 0; }
+  .no-services { padding: 1rem 0.75rem; color: var(--muted); font-size: 0.75rem; line-height: 1.6; }
+  .content { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+  .empty-state { flex: 1; display: flex; align-items: center; justify-content: center; color: var(--muted); font-size: 0.85rem; }
+  .tabs { display: flex; border-bottom: 1px solid var(--border); background: var(--surface); flex-shrink: 0; }
+  .tab { padding: 0.6rem 1.25rem; cursor: pointer; font-size: 0.8rem; color: var(--muted); border-bottom: 2px solid transparent; }
+  .tab:hover { color: var(--text); }
+  .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+  .log-panel { flex: 1; overflow-y: auto; padding: 0.75rem; font-size: 0.78rem; line-height: 1.7; word-break: break-all; }
+  .log-line.error { color: var(--danger); }
+  .log-line.warn  { color: var(--warning); }
+  .log-line.ai    { color: var(--ai); }
+  .chat-messages { flex: 1; overflow-y: auto; padding: 0.75rem; display: flex; flex-direction: column; gap: 0.75rem; }
+  .chat-msg { max-width: 85%; padding: 0.5rem 0.75rem; border-radius: 6px; font-size: 0.82rem; line-height: 1.6; white-space: pre-wrap; }
+  .chat-msg.user { background: var(--border); align-self: flex-end; }
+  .chat-msg.ai   { background: rgba(129,140,248,0.1); border: 1px solid rgba(129,140,248,0.2); color: var(--ai); align-self: flex-start; }
+  .chat-empty { flex: 1; display: flex; align-items: center; justify-content: center; color: var(--muted); font-size: 0.8rem; }
+  .chat-input-row { display: flex; gap: 0.5rem; padding: 0.75rem; border-top: 1px solid var(--border); background: var(--surface); flex-shrink: 0; }
+  .chat-input { flex: 1; background: var(--bg); border: 1px solid var(--border); border-radius: 4px; padding: 0.5rem 0.75rem; color: var(--text); font-family: inherit; font-size: 0.82rem; outline: none; }
+  .chat-input:focus { border-color: var(--accent); }
+  .chat-send { padding: 0.5rem 1rem; background: var(--accent); color: var(--bg); border: none; border-radius: 4px; cursor: pointer; font-family: inherit; font-size: 0.8rem; font-weight: bold; letter-spacing: 1px; }
+  .chat-send:disabled { opacity: 0.4; cursor: not-allowed; }
+</style>
+</head>
+<body>
+<div class="header">
+  <span class="header-title">🏰 NIGHTWATCH</span>
+  <span class="header-sub">THE TOWER</span>
+</div>
+<div class="main">
+  <div class="sidebar">
+    <div class="sidebar-label">On The Wall</div>
+    <div id="service-list"><div class="no-services">The wall is quiet.<br>Run nightwatch post<br>to take a post.</div></div>
+  </div>
+  <div class="content">
+    <div class="empty-state" id="empty-state">⚔ &nbsp; Select a guard post to begin watching</div>
+    <div id="service-view" style="display:none; flex:1; flex-direction:column; overflow:hidden;">
+      <div class="tabs">
+        <div class="tab active" data-tab="context">Ravens Log</div>
+        <div class="tab" data-tab="suggestions">Scrolls</div>
+        <div class="tab" data-tab="chat">Counsel</div>
+      </div>
+      <div id="tab-context" class="log-panel"></div>
+      <div id="tab-suggestions" class="log-panel" style="display:none;"></div>
+      <div id="tab-chat" style="display:none; flex:1; flex-direction:column; overflow:hidden;">
+        <div class="chat-messages" id="chat-messages">
+          <div class="chat-empty" id="chat-empty">Speak to the watchman about what stirs in the logs.</div>
+        </div>
+      </div>
+      <div class="chat-input-row">
+        <input class="chat-input" id="chat-input" placeholder="Speak to the watchman..." disabled>
+        <button class="chat-send" id="chat-send" disabled>⚔ SEND</button>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+let activeService = null, contextSSE = null, suggestionsSSE = null, chatStreaming = false
+
+async function refreshServices() {
+  try {
+    const services = await fetch('/api/services').then(r => r.json())
+    const list = document.getElementById('service-list')
+    if (!services.length) { list.innerHTML = '<div class="no-services">The wall is quiet.<br>Run nightwatch post<br>to take a post.</div>'; return }
+    list.innerHTML = services.map(s => `<div class="service-item ${s.name === activeService ? 'active' : ''}" onclick="selectService('${s.name}')"><div class="service-dot"></div>${s.name}</div>`).join('')
+  } catch {}
+}
+setInterval(refreshServices, 3000)
+refreshServices()
+
+async function selectService(name) {
+  activeService = name
+  if (contextSSE) { contextSSE.close(); contextSSE = null }
+  if (suggestionsSSE) { suggestionsSSE.close(); suggestionsSSE = null }
+  document.getElementById('empty-state').style.display = 'none'
+  const view = document.getElementById('service-view')
+  view.style.display = 'flex'
+  document.getElementById('tab-context').innerHTML = ''
+  document.getElementById('tab-suggestions').innerHTML = ''
+  document.getElementById('chat-messages').innerHTML = '<div class="chat-empty" id="chat-empty">Speak to the watchman about what stirs in the logs.</div>'
+  document.getElementById('chat-input').disabled = false
+  document.getElementById('chat-send').disabled = false
+  refreshServices()
+  contextSSE = new EventSource(`/sse/${name}/context`)
+  contextSSE.onmessage = e => appendLine('tab-context', JSON.parse(e.data))
+  suggestionsSSE = new EventSource(`/sse/${name}/suggestions`)
+  suggestionsSSE.onmessage = e => appendLine('tab-suggestions', JSON.parse(e.data), true)
+  try {
+    const history = await fetch(`/api/chat/${name}`).then(r => r.json())
+    history.forEach(m => addMsg(m.role, m.text))
+  } catch {}
+}
+
+function appendLine(panelId, text, isAI = false) {
+  const panel = document.getElementById(panelId)
+  const div = document.createElement('div')
+  div.className = 'log-line' + (isAI ? ' ai' : /error|exception|fatal|ECONNREFUSED/i.test(text) ? ' error' : /warn/i.test(text) ? ' warn' : '')
+  div.textContent = text
+  panel.appendChild(div)
+  if (panel.scrollHeight - panel.scrollTop - panel.clientHeight < 80) panel.scrollTop = panel.scrollHeight
+}
+
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'))
+    tab.classList.add('active')
+    const active = tab.dataset.tab
+    document.getElementById('tab-context').style.display = active === 'context' ? 'block' : 'none'
+    document.getElementById('tab-suggestions').style.display = active === 'suggestions' ? 'block' : 'none'
+    document.getElementById('tab-chat').style.display = active === 'chat' ? 'flex' : 'none'
+  })
+})
+
+function addMsg(role, text) {
+  const c = document.getElementById('chat-messages')
+  const empty = document.getElementById('chat-empty')
+  if (empty) empty.remove()
+  const div = document.createElement('div')
+  div.className = `chat-msg ${role}`
+  div.textContent = text
+  c.appendChild(div)
+  c.scrollTop = c.scrollHeight
+  return div
+}
+
+async function sendMessage() {
+  if (!activeService || chatStreaming) return
+  const input = document.getElementById('chat-input')
+  const text = input.value.trim()
+  if (!text) return
+  chatStreaming = true
+  input.value = ''
+  input.disabled = true
+  document.getElementById('chat-send').disabled = true
+  document.querySelector('[data-tab="chat"]').click()
+  addMsg('user', text)
+  const aiDiv = addMsg('ai', '▌')
+  const res = await fetch(`/api/chat/${activeService}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text }) })
+  const reader = res.body.getReader()
+  const decoder = new TextDecoder()
+  let aiText = ''
+  while (true) {
+    const { done, value } = await reader.read()
+    if (done) break
+    for (const line of decoder.decode(value).split('\n')) {
+      if (!line.startsWith('data: ')) continue
+      const raw = line.slice(6)
+      if (raw === '[DONE]') break
+      try { const { chunk, error } = JSON.parse(raw); if (error) { aiDiv.textContent = `Error: ${error}`; break }; if (chunk) { aiText += chunk; aiDiv.textContent = aiText } } catch {}
+    }
+    document.getElementById('chat-messages').scrollTop = 999999
+  }
+  chatStreaming = false
+  input.disabled = false
+  document.getElementById('chat-send').disabled = false
+  input.focus()
+}
+document.getElementById('chat-send').addEventListener('click', sendMessage)
+document.getElementById('chat-input').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); sendMessage() } })
+</script>
+</body>
+</html>

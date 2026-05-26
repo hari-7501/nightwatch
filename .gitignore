@@ -3,3 +3,5 @@ node_modules/
 .superpowers/
 .claude/
 *.log
+nightwatch.md
+memory/
