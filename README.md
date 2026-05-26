@@ -26,11 +26,14 @@ git clone https://github.com/your-username/nightwatch.git
 cd nightwatch
 ```
 
-### 2. Install
+### 2. Install & link globally
 
 ```bash
 npm install
+npm install -g .
 ```
+
+This makes the `nightwatch` command available everywhere — you'll use it from inside your own project folders, not from the nightwatch directory.
 
 ### 3. Get an API Key
 
@@ -41,62 +44,62 @@ Nightwatch uses [OpenRouter](https://openrouter.ai) to access AI models. Sign up
 Open a terminal and run:
 
 ```bash
-node bin/nightwatch.js tower
+nightwatch tower
 ```
 
 This starts the dashboard at **http://localhost:4000** and opens it in your browser.
 
 ### 5. Watch a Service
 
-Open a second terminal, go to your project folder, and prefix your normal start command with `nightwatch post --`:
+Open a second terminal, **go to your project folder**, and prefix your normal start command with `nightwatch post --`:
 
 **Node.js**
 ```bash
-node bin/nightwatch.js post -- node server.js
-node bin/nightwatch.js post -- node index.js
-node bin/nightwatch.js post -- npx ts-node src/index.ts
+nightwatch post -- node server.js
+nightwatch post -- node index.js
+nightwatch post -- npx ts-node src/index.ts
 ```
 
 **Python**
 ```bash
-node bin/nightwatch.js post -- python app.py
-node bin/nightwatch.js post -- python -m uvicorn main:app --reload
-node bin/nightwatch.js post -- gunicorn app:app
+nightwatch post -- python app.py
+nightwatch post -- python -m uvicorn main:app --reload
+nightwatch post -- gunicorn app:app
 ```
 
 **Ruby / Rails**
 ```bash
-node bin/nightwatch.js post -- rails server
-node bin/nightwatch.js post -- ruby app.rb
+nightwatch post -- rails server
+nightwatch post -- ruby app.rb
 ```
 
 **Go**
 ```bash
-node bin/nightwatch.js post -- go run main.go
-node bin/nightwatch.js post -- ./your-binary
+nightwatch post -- go run main.go
+nightwatch post -- ./your-binary
 ```
 
 **Java / Spring Boot**
 ```bash
-node bin/nightwatch.js post -- java -jar target/app.jar
-node bin/nightwatch.js post -- ./mvnw spring-boot:run
-node bin/nightwatch.js post -- ./gradlew bootRun
+nightwatch post -- java -jar target/app.jar
+nightwatch post -- ./mvnw spring-boot:run
+nightwatch post -- ./gradlew bootRun
 ```
 
 **PHP**
 ```bash
-node bin/nightwatch.js post -- php artisan serve
-node bin/nightwatch.js post -- php -S localhost:8000
+nightwatch post -- php artisan serve
+nightwatch post -- php -S localhost:8000
 ```
 
 **Rust**
 ```bash
-node bin/nightwatch.js post -- cargo run
+nightwatch post -- cargo run
 ```
 
 **Any other command**
 ```bash
-node bin/nightwatch.js post -- <your start command here>
+nightwatch post -- <your start command here>
 ```
 
 Your service runs exactly as normal. Nightwatch captures everything it prints.
@@ -126,13 +129,13 @@ Click a service in the left sidebar to select it. The AI runs in the background 
 
 ```bash
 # List all services currently being watched
-node bin/nightwatch.js roster
+nightwatch roster
 
 # Stop watching a service (from its project folder)
-node bin/nightwatch.js dismiss
+nightwatch dismiss
 
 # Stop watching by name
-node bin/nightwatch.js dismiss --name backend
+nightwatch dismiss --name backend
 ```
 
 ---
@@ -169,14 +172,3 @@ Config is stored at `~/.devwatch/config.json`:
 | `severity_threshold` | `6` | Only show AI reports rated 6/10 or higher |
 | `dashboard_port` | `4000` | Port for the dashboard |
 
----
-
-## Install Globally (optional)
-
-To use `nightwatch` instead of `node bin/nightwatch.js`:
-
-```bash
-npm install -g .
-nightwatch tower
-nightwatch post -- node server.js
-```
