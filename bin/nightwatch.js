@@ -63,7 +63,7 @@ program.command('tower')
     startDashboard(config)
     const url = `http://localhost:${config.dashboard_port || 4000}`
     console.log(`\n🏰 The Tower rises at ${url}\n`)
-    try { const open = require('open'); setTimeout(() => open(url), 800) } catch {}
+    try { const open = require('open'); setTimeout(() => (open.default || open)(url), 800) } catch {}
   })
 
 program.command('dismiss')

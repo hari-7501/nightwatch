@@ -6,6 +6,17 @@ A local AI observability sidecar for developers. Wrap any service with one comma
 
 ---
 
+## Requirements
+
+| Tool | Version |
+|------|---------|
+| Node.js | **18+** (tested on v20) |
+| npm | **8+** (bundled with Node 18) |
+
+> The `open` package (`^9.x`) is ESM-only — Node 18+ is required for it to work correctly.
+
+---
+
 ## Quickstart
 
 ### 1. Download
@@ -20,8 +31,6 @@ cd nightwatch
 ```bash
 npm install
 ```
-
-> Requires **Node.js 18+**
 
 ### 3. Get an API Key
 
@@ -41,16 +50,53 @@ This starts the dashboard at **http://localhost:4000** and opens it in your brow
 
 Open a second terminal, go to your project folder, and prefix your normal start command with `nightwatch post --`:
 
+**Node.js**
 ```bash
-# Node.js
 node bin/nightwatch.js post -- node server.js
+node bin/nightwatch.js post -- node index.js
+node bin/nightwatch.js post -- npx ts-node src/index.ts
+```
 
-# Python
+**Python**
+```bash
 node bin/nightwatch.js post -- python app.py
+node bin/nightwatch.js post -- python -m uvicorn main:app --reload
+node bin/nightwatch.js post -- gunicorn app:app
+```
 
-# Any command
+**Ruby / Rails**
+```bash
 node bin/nightwatch.js post -- rails server
+node bin/nightwatch.js post -- ruby app.rb
+```
+
+**Go**
+```bash
 node bin/nightwatch.js post -- go run main.go
+node bin/nightwatch.js post -- ./your-binary
+```
+
+**Java / Spring Boot**
+```bash
+node bin/nightwatch.js post -- java -jar target/app.jar
+node bin/nightwatch.js post -- ./mvnw spring-boot:run
+node bin/nightwatch.js post -- ./gradlew bootRun
+```
+
+**PHP**
+```bash
+node bin/nightwatch.js post -- php artisan serve
+node bin/nightwatch.js post -- php -S localhost:8000
+```
+
+**Rust**
+```bash
+node bin/nightwatch.js post -- cargo run
+```
+
+**Any other command**
+```bash
+node bin/nightwatch.js post -- <your start command here>
 ```
 
 Your service runs exactly as normal. Nightwatch captures everything it prints.
