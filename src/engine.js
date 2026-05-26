@@ -58,22 +58,28 @@ function startEngine(name, config) {
   const buffer = []
   let offset = 0
   let lastTriggerTime = 0
+  let pendingAnalysis = null
   const COOLDOWN_MS = 10_000
   const contextPath = path.join(getSessionPath(name), 'context.log')
 
-  async function runAnalysis() {
+  function runAnalysis() {
+    if (pendingAnalysis) return
     const now = Date.now()
     if (now - lastTriggerTime < COOLDOWN_MS || !buffer.length) return
     lastTriggerTime = now
-    try {
-      const response = await callOpenRouter(config, buildMessages(name, buffer))
-      if (!response || response.includes('All quiet on the wall')) return
-      const severity = parseSeverity(response)
-      if (severity > 0 && severity < config.severity_threshold) return
-      appendSuggestion(name, response)
-    } catch (e) {
-      appendSuggestion(name, `⚠️ Watchman error: ${e.message}`)
-    }
+    pendingAnalysis = (async () => {
+      try {
+        const response = await callOpenRouter(config, buildMessages(name, buffer))
+        if (!response || response.includes('All quiet on the wall')) return
+        const severity = parseSeverity(response)
+        if (severity > 0 && severity < config.severity_threshold) return
+        appendSuggestion(name, response)
+      } catch (e) {
+        appendSuggestion(name, `⚠️ Watchman error: ${e.message}`)
+      } finally {
+        pendingAnalysis = null
+      }
+    })()
   }
 
   try { offset = fs.statSync(contextPath).size } catch { offset = 0 }
@@ -113,9 +119,10 @@ function startEngine(name, config) {
   const intervalMs = (config.sweep_interval || 60) * 1000
   const sweepTimer = setInterval(runAnalysis, intervalMs)
 
-  return () => {
+  return async () => {
     watcher.close()
     clearInterval(sweepTimer)
+    if (pendingAnalysis) await pendingAnalysis
   }
 }
 

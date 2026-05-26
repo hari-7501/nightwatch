@@ -27,7 +27,7 @@ program.command('post')
     createSession(name, cmd.join(' '))
     console.log(`\n⚔  Taking the post: ${name}\n   Command: ${cmd.join(' ')}\n`)
 
-    const child = spawn(cmd[0], cmd.slice(1), { stdio: ['inherit', 'pipe', 'pipe'], env: process.env })
+    const child = spawn(cmd.join(' '), [], { stdio: ['inherit', 'pipe', 'pipe'], env: process.env, shell: true })
 
     const metaPath = path.join(getSessionPath(name), '.meta.json')
     const meta = JSON.parse(fs.readFileSync(metaPath, 'utf8'))
@@ -45,8 +45,8 @@ program.command('post')
 
     const stopEngine = startEngine(name, config)
 
-    child.on('exit', (code) => {
-      stopEngine()
+    child.on('exit', async (code) => {
+      await stopEngine()
       appendLog(name, `[system] Process exited with code ${code ?? 'null'}`)
       console.log(`\n🏰 ${name} has left the wall. Exit: ${code}`)
       process.exit(code ?? 0)
